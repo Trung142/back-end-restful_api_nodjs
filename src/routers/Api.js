@@ -12,9 +12,9 @@ const { ShowOrder_Details, CreateOrder_Details, updateOrder_Details, deleteOrder
 const router = express.Router();
 const APIRouter = (req, res) => {
     router.get('/user', ShowUser);
-    router.post('/user/1', createUser);
-    router.put('/user/update/:id', updateUser);
-    router.delete('/user/delete/:id', deleteUser);
+    router.post('/user/create', createUser);
+    router.put('/user/update', updateUser);
+    router.delete('/user/delete', deleteUser);
     router.post('/user/login', handlelogin);
     return req.use('/api/v1', router);
 }

@@ -1,4 +1,4 @@
-const poolmysql = require("../configs/database")
+const poolmysql = require("../config/database")
 // bảng Order
 const ShowOrders = async (req, res) => {
     try {

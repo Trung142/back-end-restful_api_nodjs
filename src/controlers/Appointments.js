@@ -1,5 +1,4 @@
-const poolmysql = require("../configs/database")
-
+const poolmysql = require("../config/database")
 //bảng lịch hẹn 
 const showapoin = async (req, res) => {
     try {

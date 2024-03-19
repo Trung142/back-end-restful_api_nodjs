@@ -1,41 +1,34 @@
-const { json } = require("body-parser");
-const poolmysql = require("../configs/database")
+const db = require("../models");
+const { urlcreateUser, urlpdateUser, urldeleteUser } = require("../sirvices/urluser");
+const { handleUserlogin } = require("../sirvices/userlogin");
+
 //show
 const ShowUser = async (req, res) => {
     try {
-        let sql = 'select * from Acount';
-        const [row, files] = await poolmysql.execute(sql);
-        let page = req.query.page;
-        let limit = req.query.limit;
-        let total = row.length;
-        let total_page = Math.ceil(total / limit);
-        if (!page || !limit) {
-            return res.status(200).json({
+        if (req.query.page && req.query.limit) {
+            let page = req.query.page;
+            let limit = req.query.limit;
+            let offset = (page - 1) * limit;
+            const { count, rows } = await db.User.findAndCountAll({
+                offset: +offset,
+                limit: +limit
+            });
+            let totalpage = Math.ceil(count / limit);
+            return res.status(201).json({
                 message: 'ok',
-                page: page,
-                per_page: limit,
-                total: total,
-                total_page: total_page,
-                data: row
+                total: count,
+                totalpage: totalpage,
+                data: rows
             })
         }
-        else {
-            if (page < 1) {
-                page = 1;
-            } if (page > total_page) {
-                page = total_page;
-            }
-            let offset = (page - 1) * limit; //so phan tu bo qua
-            const [data, files] = await poolmysql.execute(`select * from Acount LIMIT ? OFFSET ?`, [limit, offset]);
-            return res.status(200).json({
-                message: 'ok',
-                page: page,
-                per_page: limit,
-                total: total,
-                total_page: total_page,
-                data: data
-            })
+        const user = await db.User.findAll();
+        if (!user) {
+            return res.status(200).json('Not found!');
         }
+        return res.status(201).json({
+            message: 'ok',
+            data: user
+        })
 
     } catch (error) {
         return res.status(500).json('loi server');
@@ -44,93 +37,71 @@ const ShowUser = async (req, res) => {
 //create
 const createUser = async (req, res) => {
     try {
-        const values = [
-            req.body.name,
-            req.body.email,
-            req.body.password
-        ]
-        if (!req.body.name || !req.body.email || !req.body.password) {
-            return res.status(200).json({
-                message: 'hay nhap gia tri'
-            })
-        }
-        let sql = `insert into Acount(name,email,password) values(?)`;
-        const [row, files] = await poolmysql.query(sql, [values]);
+        let message = await urlcreateUser(req.body);
         return res.status(200).json({
-            message: 'ok',
-            data: row,
-            createAt: Date()
+            errCode: message.errCode,
+            message: message.errMessage,
+            message
         })
     } catch (error) {
-        return res.status(500).json('loi server');
+        res.status(404).json({
+            errCode: 4,
+            error
+        });
     }
 
 }
 //update
 const updateUser = async (req, res) => {
     try {
-        let sql = 'update Acount set name = ?, email = ?, password = ? where id = ?';
-        if (!req.body.name || !req.body.email || !req.body.password || !req.params.id) {
-            return res.status(200).json({
-                message: 'error require server to database'
-            })
-        }
-        const [row, files] = await poolmysql.query(sql, [req.body.name, req.body.email, req.body.password, req.params.id]);
+        let message = await urlpdateUser(req)
         return res.status(200).json({
-            message: 'ok',
-            data: row,
-            updateAT: Date()
+            errCode: message.errCode,
+            message: message.errMessage,
+            message
         })
     } catch (error) {
-        return res.status(500).json('loi server');
+        return res.status(404).json({
+            errCode: 4,
+            error
+        });
     }
 
 }
 //deleteUser
 const deleteUser = async (req, res) => {
     try {
-        let userid = req.params.id;
-        if (!userid) {
-            return res.status(200).json({
-                message: "error require server to database!"
-            })
-        }
-        let sql = 'delete from Acount where id = ?';
-        const [row, files] = await poolmysql.execute(sql, [userid]);
+        let message = await urldeleteUser(req);
         return res.status(200).json({
-            message: 'ok',
-            data: row
+            errCode: message.errCode,
+            message: message.errMessage,
+            message
         })
     } catch (error) {
-        return res.status(500).json(error, 'error server');
+        return res.status(404).json({
+            errCode: 4,
+            error
+        });
     }
 }
 // login
 const handlelogin = async (req, res) => {
-    try {
-
-        if (!req.body.name || !req.body.password) {
-            return res.status(200).json({
-                message: 'error query to server !'
-            })
-        } else {
-            let sql = 'select * from Acount where name = ? and password = ?';
-            const [row, files] = await poolmysql.query(sql, [req.body.name, req.body.password]);
-            if (row == '') {
-                return res.status(400).json({
-                    message: "Missing password or username"
-                })
-            }
-            return res.status(200).json({
-                message: 'ok',
-                data: row,
-                updateAT: Date()
-            })
-        }
-
-    } catch (error) {
-        return res.status(500).json('loi server', error);
+    let email = req.body.email;
+    let password = req.body.password;
+    if (!email || !password) {
+        return res.status(500).json({
+            errCode: 1,
+            message: 'error query to server !'
+        })
     }
+    let userData = await handleUserlogin(email, password);
+    console.log(userData);
+    return res.status(200).json({
+        errCode: userData.errCode,
+        message: userData.errMessage,
+        user: userData.User ? userData.User : {}
+    })
+
 }
 module.exports = {
     ShowUser,

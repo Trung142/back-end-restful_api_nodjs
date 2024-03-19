@@ -1,4 +1,4 @@
-const poolmysql = require("../configs/database")
+const poolmysql = require("../config/database")
 // bảng sản phẩm
 const ShowProducts = async (req, res) => {
     try {

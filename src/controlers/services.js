@@ -1,4 +1,4 @@
-const poolmysql = require("../configs/database")
+const poolmysql = require("../config/database")
 const ShowServices = async (req, res) => {
     try {
         const [row, files] = await poolmysql.execute('select * from Services');
