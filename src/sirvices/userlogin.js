@@ -1,6 +1,7 @@
 const db = require("../models")
 const bcrypt = require('bcrypt');
 const salt = bcrypt.genSaltSync(10);
+
 let handleUserlogin = (email, password) => {
     return new Promise(async (resolve, reject) => {
         try {

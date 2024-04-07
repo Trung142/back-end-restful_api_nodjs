@@ -15,12 +15,12 @@ module.exports = (sequelize, DataTypes) => {
     }
     Product.init({
         product_name: DataTypes.STRING,
-        desscription: DataTypes.STRING,
+        description: DataTypes.STRING,
         price: DataTypes.DECIMAL(10, 2),
         aquantity: DataTypes.INTEGER
     }, {
         sequelize,
-        modelName: 'Customer',
+        modelName: 'Product',
     });
-    return User;
+    return Product;
 };

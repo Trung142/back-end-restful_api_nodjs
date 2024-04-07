@@ -1,12 +1,15 @@
-const poolmysql = require("../config/database")
+const poolmysql = require("../config/database");
+const db = require("../models");
+
 //bảng lịch hẹn 
 const showapoin = async (req, res) => {
     try {
-        let sql = `select c.first_name ,s.service_name,s.price  ,a2.status  from Appointments a2 
-        inner join Customers c on a2.customer_id = c.customer_id 
-        inner join Services s on a2.customer_id = c.customer_id 
-        WHERE c.customer_id  = ?`
-        const userid = req.params.id
+        let sql = `select a2.id, c.username,c.phone,c.email,s.service_name,u.username as employee_name,s.price,a2.status,DATE(a2.appoinment_date),a2.start_time from Appointments a2
+        inner join Customers c on a2.customer_id = c.id 
+        inner join Services s on a2.service_id= s.id 
+        inner join Users u on a2.employee_id = u.id 
+ 		where a2.id =?`
+        const userid = req.query.id
         if (!userid) {
             return res.status(200).json({
                 message: 'ok',
@@ -26,56 +29,55 @@ const showapoin = async (req, res) => {
 }
 const ShowAppointment = async (req, res) => {
     try {
-        const [row, files] = await poolmysql.execute('select * from Appointments');
-        let page = req.query.page;
-        let limit = req.query.limit;
-        let total = row.length;
-        let total_page = Math.ceil(total / limit);
-        if (!page || !limit) {
-            return res.status(200).json({
+        if (req.query.page && req.query.limit) {
+            let page = req.query.page;
+            let limit = req.query.limit;
+            let offset = (page - 1) * limit;
+            const { count, rows } = await db.Appointment.findAndCountAll({
+                offset: +offset,
+                limit: +limit
+            });
+            let totalpage = Math.ceil(count / limit);
+            delete rows.password;
+            return res.status(201).json({
                 message: 'ok',
-                total: total,
-                total_page: total_page,
-                data: row
+                total: count,
+                totalpage: totalpage,
+                data: rows
             })
         }
-        if (page < 1) {
-            page = 1;
+        const user = await db.Appointment.findAll({
+            raw: true
+        });
+        if (!user) {
+            return res.status(200).json('Not found!');
         }
-        if (page > total_page) {
-            page = total_page;
-        }
-        const offset = (page - 1) * limit;
-        const [data] = await poolmysql.execute('select * from Appointments limit ? offset ?', [limit, offset])
-        return res.status(200).json({
+        delete user.password;
+        return res.status(201).json({
             message: 'ok',
-            page: page,
-            per_page: limit,
-            total: total,
-            total_page: total_page,
-            data: data
+            data: user
         })
 
     } catch (error) {
-        return res.status(500).json({
-            message: 'error server!',
-            error: error
-        })
+        return res.status(500).json('loi server');
     }
-
 }
 //create customers
 const CreateAppointment = async (req, res) => {
     try {
-        let { customer_id, employee_id, service_id, appointment_date, start_time, end_time, status } = req.body;
-
-        let sql = 'insert into Appointments(customer_id, employee_id, service_id, appointment_date, start_time, end_time, status) values(?,?,?,?,?,?,?)';
+        let { customer_id, employee_id, service_id, date, start_time } = req.body;
         if (!customer_id || !employee_id || !service_id) {
             return res.status(200).json({
                 message: "dont's input values !"
             })
         }
-        const [row, files] = await poolmysql.query(sql, [customer_id, employee_id, service_id, appointment_date, start_time, end_time, status]);
+        const row = await db.Appointment.create({
+            customer_id: customer_id,
+            employee_id: employee_id,
+            service_id: service_id,
+            appoinment_date: date,
+            start_time: start_time
+        });
         return res.status(200).json({
             message: 'ok',
             data: row,
@@ -99,7 +101,7 @@ const updateAppointment = async (req, res) => {
                 message: 'not input values update !'
             })
         }
-        let sql = `update Appointments 
+        let sql = `update Appointment
         set customer_id = ?, employee_id = ?, service_id = ?, appointment_date = ?, start_time = ?, end_time = ?, status = ? where appointment_id = ?`;
         const [row, files] = await poolmysql.query(sql, [customer_id, employee_id, service_id, appointment_date, start_time, end_time, status, userid]);
         return res.status(200).json({
@@ -123,7 +125,7 @@ const deleteAppointment = async (req, res) => {
                 message: 'id null'
             })
         }
-        const [row, files] = await poolmysql.query(`delete from Appointments where appointment_id = ?`, [userid]);
+        const [row, files] = await poolmysql.query(`delete from Appointment where appointment_id = ?`, [userid]);
         return res.status(200).json({
             message: 'ok',
             data: row,

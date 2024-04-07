@@ -1,7 +1,6 @@
 const express = require('express');
 const { ShowUser, createUser, updateUser, deleteUser, handlelogin } = require('../controlers/apicontroler');
 const { ShowCustomer, CreateCustomers, updateCustomers, deleteCustomers } = require('../controlers/customer');
-const { ShowEmployeer, CreateEmployeer, updateEmployeer, deleteEmployeer } = require('../controlers/employeer');
 const { ShowServices, CreateServices, updateServices, deleteServices } = require('../controlers/services');
 const { ShowAppointment, CreateAppointment, updateAppointment, deleteAppointment, showapoin } = require('../controlers/Appointments');
 const { ShowFeedbacks, CreateFeedbacks, updateFeedbacks, deleteFeedbacks } = require('../controlers/feeback');
@@ -25,13 +24,6 @@ const APIcustomes = (req, res) => {
     router.put('/update', updateCustomers);
     router.delete('/delete', deleteCustomers);
 }
-//employees
-const APIemployees = (req, res) => {
-    router.get('/employees', ShowEmployeer);
-    router.post('/create/employ', CreateEmployeer);
-    router.put('/update/employ', updateEmployeer);
-    router.delete('/delete/employ', deleteEmployeer);
-}
 //Services
 const APIservices = (req, res) => {
     router.get('/services', ShowServices);
@@ -41,7 +33,7 @@ const APIservices = (req, res) => {
 }
 //apppointments
 const APIappoinment = (req, res) => {
-    router.get('/v2/:id', showapoin);
+    router.get('/v2', showapoin);
     router.get('/appointment', ShowAppointment);
     router.post('/create/appointment', CreateAppointment);
     router.put('/update/appointment', updateAppointment);
@@ -66,7 +58,7 @@ const APIproducts = (req, res) => {
     router.get('/product', ShowProducts);
     router.post('/create/product', CreateProducts);
     router.put('/update/product', updateProducts);
-    router.delete('delete/product', deleteProducts);
+    router.delete('/delete/product', deleteProducts);
 }
 //Order
 const APIorders = (req, res) => {
@@ -85,7 +77,6 @@ const APIorder_Details = (req, res) => {
 module.exports = {
     APIRouter,
     APIcustomes,
-    APIemployees,
     APIservices,
     APIappoinment,
     APIfeedbacks,

@@ -1,112 +1,66 @@
-const poolmysql = require("../config/database")
+const poolmysql = require("../config/database");
+const db = require("../models");
+const { urlreadService, crudCreateService, crudUpdateService, crudDeleteService } = require("../sirvices/urlService");
 const ShowServices = async (req, res) => {
     try {
-        const [row, files] = await poolmysql.execute('select * from Services');
-        let page = req.query.page;
-        let limit = req.query.limit;
-        let total = row.length;
-        let total_page = Math.ceil(total / limit);
-        if (!page || !limit) {
-            return res.status(200).json({
-                message: 'ok',
-                total: total,
-                total_page: total_page,
-                data: row
-            })
-        }
-        if (page < 1) {
-            page = 1;
-        }
-        if (page > total_page) {
-            page = total_page;
-        }
-        const offset = (page - 1) * limit;
-        const [data] = await poolmysql.execute('select * from Services limit ? offset ?', [limit, offset])
+        let message = await urlreadService(req.query);
         return res.status(200).json({
-            message: 'ok',
-            page: page,
-            per_page: limit,
-            total: total,
-            total_page: total_page,
-            data: data
+            errCode: message.errCode,
+            message: message.errMessage,
+            message
         })
-
     } catch (error) {
-        return res.status(500).json({
-            message: 'error server!',
-            error: error
+        res.status(404).json({
+            errCode: 4,
+            error
         })
     }
-
 }
 //create customers
 const CreateServices = async (req, res) => {
     try {
-        let { service_name, description, price } = req.body;
-        let sql = 'insert into Services(service_name,description,price) values(?,?,?)';
-        if (!service_name || !price) {
-            return res.status(200).json({
-                message: "dont's input values !"
-            })
-        }
-        const [row, files] = await poolmysql.query(sql, [service_name, description, price]);
+        let message = await crudCreateService(req.body);
         return res.status(200).json({
-            message: 'ok',
-            data: row,
-            CreateAT: Date()
+            errCode: message.errCode,
+            message: message.errMessage,
+            message
         })
     } catch (error) {
-        return res.status(500).json({
-            message: 'error server !',
-            error: error
+        res.status(404).json({
+            errCode: 4,
+            error
         })
     }
 }
 //update Customers
 const updateServices = async (req, res) => {
     try {
-        let { service_name, description, price } = req.body;
-        let userid = req.query.id;
-        if (!service_name || !price || !userid) {
-            return res.status(200).json({
-                message: 'not input values update !'
-            })
-        }
-        let sql = `update Services 
-        set service_name = ?,description = ?,price = ? where service_id = ?`;
-        const [row, files] = await poolmysql.query(sql, [service_name, description, price, userid]);
+        let message = await crudUpdateService(req);
         return res.status(200).json({
-            message: 'ok',
-            data: row,
-            updateAt: Date()
+            errCode: message.errCode,
+            message: message.errMessage,
+            message
         })
     } catch (error) {
-        return res.status(500).json({
-            message: 'error server !',
-            error: error
+        res.status(404).json({
+            errCode: 4,
+            error
         })
     }
 }
 //delete
 const deleteServices = async (req, res) => {
     try {
-        let userid = req.query.id;
-        console.log(userid);
-        if (!userid) {
-            return res.status(200).json({
-                message: 'id null'
-            })
-        }
-        const [row, files] = await poolmysql.query(`delete from Services where service_id = ?`, [userid]);
+        let message = await crudDeleteService(req);
         return res.status(200).json({
-            message: 'ok',
-            data: row,
-            deleteAt: Date()
+            errCode: message.errCode,
+            message: message.errMessage,
+            message
         })
     } catch (error) {
-        return res.status(500).json({
-            message: 'error server !',
-            error: error
+        res.status(404).json({
+            errCode: 4,
+            error
         })
     }
 }
